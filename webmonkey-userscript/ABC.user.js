@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ABC
 // @description  Watch videos in external player.
-// @version      1.0.2
+// @version      1.0.3
 // @match        *://abc.com/*
 // @match        *://*.abc.com/*
 // @icon         https://abc.com/favicon.ico
@@ -79,11 +79,11 @@ var cancel_event = function(event){
 
 // ----------------------------------------------------------------------------- helpers (data structures)
 
-var extract_show = function(data) {
-  var show
+var extract_show = function(all_data) {
+  var data, show
 
   try {
-    data = data.page.content.show.layout.show
+    data = all_data.page.content.shell.layout.show
 
     show = {
       url:         data.url   || '',
@@ -91,9 +91,17 @@ var extract_show = function(data) {
       description: data.aboutTheShowSummary || data.about || ''
     }
 
+    if (!show.url) {
+      try {
+        data     = all_data.page.content.shell.layout.theme.link
+        show.url = data.urlValue || ''
+      }
+      catch(e2) {}
+    }
+
     state.show = show
   }
-  catch(e) {}
+  catch(e1) {}
 }
 
 var convert_raw_video = function(raw_video, raw_link) {
