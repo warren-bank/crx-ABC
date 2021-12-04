@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ABC
 // @description  Watch videos in external player.
-// @version      1.0.0
+// @version      1.0.1
 // @match        *://abc.com/*
 // @match        *://*.abc.com/*
 // @icon         https://abc.com/favicon.ico
@@ -1013,7 +1013,7 @@ var init = function() {
 
   if (!data) return
 
-  is_episode      = (data.page.type === 'video') && (!data.page.subType || (data.page.subType === 'episode'))
+  is_episode      = (data.page.type === 'video') && (!data.page.subType || (data.page.subType === 'episode') || (data.page.subType === 'movies-and-specials'))
   is_episode_list = (data.page.type === 'show')  && (!data.page.subType || (data.page.subType === 'episode-guide'))
 
   if (is_episode) {
