@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ABC
 // @description  Watch videos in external player.
-// @version      1.0.1
+// @version      1.0.2
 // @match        *://abc.com/*
 // @match        *://*.abc.com/*
 // @icon         https://abc.com/favicon.ico
@@ -38,6 +38,7 @@ var user_options = {
 // ----------------------------------------------------------------------------- state
 
 var state = {
+  "show":            null,
   "videos":          null,
   "did_rewrite_dom": false
 }
@@ -77,6 +78,23 @@ var cancel_event = function(event){
 }
 
 // ----------------------------------------------------------------------------- helpers (data structures)
+
+var extract_show = function(data) {
+  var show
+
+  try {
+    data = data.page.content.show.layout.show
+
+    show = {
+      url:         data.url   || '',
+      title:       data.title || '',
+      description: data.aboutTheShowSummary || data.about || ''
+    }
+
+    state.show = show
+  }
+  catch(e) {}
+}
 
 var convert_raw_video = function(raw_video, raw_link) {
   var video = null
@@ -549,6 +567,7 @@ var strings = {
 
 var constants = {
   "dom_classes": {
+    "div_show":                     "show",
     "div_episodes":                 "episodes",
     "div_webcast_icons":            "icons-container"
   },
@@ -614,13 +633,33 @@ var reinitialize_dom = function() {
       '  text-align: left;',
       '}',
 
+      // --------------------------------------------------- CSS: show
+
+      'div.' + constants.dom_classes.div_show + ' > h2 {',
+      '  text-align: center;',
+      '  margin: 0.5em 0;',
+      '}',
+
+      'div.' + constants.dom_classes.div_show + ' > h2 > a {',
+      '  display: inline-block;',
+      '  margin: 0;',
+      '  color: blue;',
+      '  text-decoration: none;',
+      '}',
+
+      'div.' + constants.dom_classes.div_show + ' > blockquote {',
+      '  display: block;',
+      '  background-color: #eee;',
+      '  padding: 0.5em 1em;',
+      '  margin: 0;',
+      '}',
+
       // --------------------------------------------------- CSS: episodes
 
       'div.' + constants.dom_classes.div_episodes + ' > ul {',
       '  list-style: none;',
       '  margin: 0;',
       '  padding: 0;',
-      '  padding-left: 1em;',
       '}',
 
       'div.' + constants.dom_classes.div_episodes + ' > ul > li {',
@@ -733,6 +772,7 @@ var reinitialize_dom = function() {
       '</style>'
     ],
     "body": [
+      '<div class="' + constants.dom_classes.div_show     + '"></div>',
       '<div class="' + constants.dom_classes.div_episodes + '"></div>'
     ]
   }
@@ -877,6 +917,24 @@ var make_episode_listitem_html = function(video, video_index) {
   return '<li x-video-index="' + video_index + '">' + html.join("\n") + '</li>'
 }
 
+var make_show_html = function() {
+  var html = []
+
+  if (state.show) {
+    if (state.show.title) {
+      if (state.show.url)
+        html.push('<h2><a target="_blank" href="' + state.show.url + '">' + state.show.title + '</a></h2>')
+      else
+        html.push('<h2>' + state.show.title + '</h2>')
+    }
+
+    if (state.show.description)
+      html.push('<blockquote>' + state.show.description + '</blockquote>')
+  }
+
+  return html.join("\n")
+}
+
 // -------------------------------------
 
 var onclick_download_show_video_button = function(event) {
@@ -929,17 +987,24 @@ var add_episode_div_buttons = function(episodes_div) {
 // -------------------------------------
 
 var rewrite_show_page = function() {
-  var episodes_div, html
+  var show_div, episodes_div, html
 
   reinitialize_dom()
 
+  show_div     = unsafeWindow.document.querySelector('div.' + constants.dom_classes.div_show)
   episodes_div = unsafeWindow.document.querySelector('div.' + constants.dom_classes.div_episodes)
-  if (!episodes_div) return
 
-  html = '<ul>' + state.videos.map(make_episode_listitem_html).join("\n") + '</ul>'
-  episodes_div.innerHTML = html
+  if (show_div && state.show) {
+    html = make_show_html()
+    show_div.innerHTML = html
+  }
 
-  add_episode_div_buttons(episodes_div)
+  if (episodes_div && state.videos) {
+    html = '<ul>' + state.videos.map(make_episode_listitem_html).join("\n") + '</ul>'
+    episodes_div.innerHTML = html
+
+    add_episode_div_buttons(episodes_div)
+  }
 
   user_options.webmonkey.post_intent_redirect_to_url = null
   state.did_rewrite_dom = true
@@ -1012,6 +1077,8 @@ var init = function() {
   }
 
   if (!data) return
+
+  extract_show(data)
 
   is_episode      = (data.page.type === 'video') && (!data.page.subType || (data.page.subType === 'episode') || (data.page.subType === 'movies-and-specials'))
   is_episode_list = (data.page.type === 'show')  && (!data.page.subType || (data.page.subType === 'episode-guide'))
