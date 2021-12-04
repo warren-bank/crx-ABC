@@ -1,0 +1,444 @@
+-------------------------------------------------------------------------------- strategy used by ytdl video extractor:
+
+https://github.com/ytdl-org/youtube-dl/issues/22823
+https://github.com/ytdl-org/youtube-dl/issues/25207
+https://github.com/ytdl-org/youtube-dl/issues/26058
+
+https://github.com/ytdl-org/youtube-dl/pull/22864
+https://github.com/ytdl-org/youtube-dl/pull/25216
+
+----------------------------------------
+
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L21
+  "brand" for ABC is "001"
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L155
+  URL to access an API endpoint to request JSON data with HLS video URL:
+    sprintf('http://api.contents.watchabc.go.com/vp2/ws/contents/3000/videos/%s/001/-1/%s/-1/%s/-1/-1.json', brand, show_id, video_id)
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L180
+  "video_id" occurs in the HTML content and always begins with the prefix "VDKA"
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L201
+  if "video_id" is not found:
+    "show_id" occurs in the HTML content in a tag having an attribute with the name: "data-show-id" and the value matches: "SH\d+"
+
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L216
+  "asset_url"   = jsondata_1.video.assets.asset[i].value
+  "video_id"    = jsondata_1.video.id
+  "video_type"  = jsondata_1.video.type
+  "accesslevel" = jsondata_1.video.accesslevel
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L223
+  POST_data = {
+    "video_id":   jsondata_1.video.id,
+    "video_type": jsondata_1.video.type,
+    "brand":      "001",
+    "device":     "001"
+  }
+https://github.com/ytdl-org/youtube-dl/issues/10439#issuecomment-246993208
+  POST_data is serialized to the standard "key=value&..." string format
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L243
+  URL to access an API endpoint to request JSON data with session key to authorize access to HLS video URL:
+    'https://api.entitlement.watchabc.go.com/vp2/ws-secure/entitlement/2020/authorize.json'
+  POST:
+    POST_data
+https://github.com/ytdl-org/youtube-dl/blob/2021.06.06/youtube_dl/extractor/go.py#L253
+  "asset_url" += "?" + jsondata_2.uplynkData.sessionKey
+
+-------------------------------------------------------------------------------- example:
+// https://abc.com/shows/the-rookie
+// https://abc.com/shows/the-rookie/episode-guide/season-4
+// https://abc.com/shows/the-rookie/episode-guide/season-04/07-fire-fight
+
+{
+  const brand    = '001'
+  const show_id  = 'SH554688890'
+  const video_id = 'VDKA25290950'
+
+  const url = `http://api.contents.watchabc.go.com/vp2/ws/contents/3000/videos/${brand}/001/-1/${show_id}/-1/${video_id}/-1/-1.json`
+
+  console.log(url)
+}
+
+result:
+=======
+http://api.contents.watchabc.go.com/vp2/ws/contents/3000/videos/001/001/-1/SH554688890/-1/VDKA25290950/-1/-1.json
+
+----------------------------------------
+
+curl 'http://api.contents.watchabc.go.com/vp2/ws/contents/3000/videos/001/001/-1/SH554688890/-1/VDKA25290950/-1/-1.json' --insecure --compressed
+
+result:
+=======
+{
+    "ver": "3000",
+    "build": "2163",
+    "device": "9024",
+    "brand": "13",
+    "xmlns": "http://abc.go.com/vp2/ws/xmlns",
+    "count": "1",
+    "video": [{
+        "id": "VDKA25290950",
+        "legacyid": "VD5525290950",
+        "tmsid": "EP029705430064",
+        "eidr": "",
+        "kmcid": "25290950",
+        "distributionChannelId": "2",
+        "workflowid": "5e4c42ff60494120886e8a5e2c92d6f5",
+        "ver": "0",
+        "accesslevel": "0",
+        "type": "lf",
+        "adtype": "dynamic",
+        "title": "Fire Fight",
+        "urltitle": "fire-fight",
+        "description": "Chen and Bradford enlist Grey's help.",
+        "longdescription": "Officer Nolan and Bailey discover there's more to Fred's death than meets the eye; Officer Chen and Officer Bradford demand a treasure hunt rematch and enlist Officer Grey to help set the terms to a new bet.",
+        "episodenumber": "7",
+        "number": "7",
+        "productionnumber": "407",
+        "show": {
+            "id": "SH554688890",
+            "tmsid": "SH029705430000",
+            "type": "Show",
+            "title": "The Rookie",
+            "urltitle": "the-rookie",
+            "isDailyShow": false,
+            "description": "Six months into his career as a cop, John Nolan will be put to the test as he looks to figure out what kind of cop he ultimately wants to be.",
+            "nielseninfo": {
+                "nielsenGenres": [{
+                    "description": "General Drama",
+                    "code": "GD"
+                }]
+            },
+            "tags": ["001,abc"],
+            "showPrefix": "RKE",
+            "thumbnails": {
+                "thumbnail": [{
+                    "width": "113",
+                    "height": "61",
+                    "type": "casting-thumb",
+                    "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/showimages/4bd08edbf97d90ef2f74748f1f7843b1/113x61-Q90_4bd08edbf97d90ef2f74748f1f7843b1.jpg",
+                    "ratio": "16x9",
+                    "languages": ["all"]
+                }, {
+                    "width": "952",
+                    "height": "517",
+                    "type": "casting-image",
+                    "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/showimages/4bd08edbf97d90ef2f74748f1f7843b1/952x517-Q90_4bd08edbf97d90ef2f74748f1f7843b1.jpg",
+                    "ratio": "16x9",
+                    "languages": ["all"]
+                }, {
+                    "width": "324",
+                    "height": "176",
+                    "type": "main",
+                    "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/showimages/4bd08edbf97d90ef2f74748f1f7843b1/324x176-Q90_4bd08edbf97d90ef2f74748f1f7843b1.jpg",
+                    "ratio": "16x9",
+                    "languages": ["all"]
+                }]
+            },
+            "tunein": "SUNDAYS 10/9c",
+            "brand": "001",
+            "brands": ["001"],
+            "trackcode": {
+                "generic": {
+                    "cprogram": "primetime",
+                    "cgenre": "drama",
+                    "cshow": "therookie",
+                    "ccategory": "primetime"
+                },
+                "comscore": {
+                    "cgenre": "drama",
+                    "cshow": "RKE"
+                }
+            },
+            "social": {
+                "share": {
+                    "link": "http://abc.com/shows/the-rookie",
+                    "caption": "Check out The Rookie on ABC",
+                    "description": "Six months into his career as a cop, John Nolan will be put to the test as he looks to figure out what kind of cop he ultimately wants to be.",
+                    "name": "The Rookie",
+                    "thumbnail": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/showimages/4bd08edbf97d90ef2f74748f1f7843b1/324x176-Q90_4bd08edbf97d90ef2f74748f1f7843b1.jpg",
+                    "networks": {
+                        "sharingtype": "all"
+                    },
+                    "fastshare": false
+                }
+            },
+            "lang": "en",
+            "url": "/shows/the-rookie",
+            "lastmodifieddate": "Fri, 22 Oct 2021 09:29:35 -0700",
+            "premieredate": "Tue, 16 Oct 2018 00:00:00 -0700",
+            "audiodescription": true
+        },
+        "season": {
+            "id": "4",
+            "num": "4",
+            "trackcode": {
+                "generic": {
+                    "cserie": "4"
+                }
+            },
+            "numWithPadding": "04"
+        },
+        "duration": {
+            "unit": "millisecond",
+            "value": "2574744"
+        },
+        "airdates": {
+            "airdate": ["Sun, 14 Nov 2021 22:00:00 -0800"]
+        },
+        "availdate": "Mon, 22 Nov 2021 02:00:00 -0800",
+        "expiredate": "Wed, 1 Jun 2022 02:00:00 -0700",
+        "createdDate": "Fri, 5 Nov 2021 14:05:08 -0700",
+        "tvrating": {
+            "rating": "TV-14",
+            "descriptors": "V"
+        },
+        "url": "http://abc.com/shows/the-rookie/episode-guide/season-04/07-fire-fight",
+        "cues": {
+            "cue": [{
+                "type": "bb:ad",
+                "unit": "millisecond",
+                "value": "0"
+            }, {
+                "type": "ad",
+                "unit": "millisecond",
+                "value": "481773"
+            }, {
+                "type": "ad",
+                "unit": "millisecond",
+                "value": "847681"
+            }, {
+                "type": "ad",
+                "unit": "millisecond",
+                "value": "1506840"
+            }, {
+                "type": "ad",
+                "unit": "millisecond",
+                "value": "1946697"
+            }, {
+                "type": "ad",
+                "unit": "millisecond",
+                "value": "2256632"
+            }, {
+                "type": "pr",
+                "unit": "millisecond",
+                "value": "2574744"
+            }]
+        },
+        "closedcaption": {
+            "src": [{
+                "lang": "en-us",
+                "type": "timedtext",
+                "value": "http://cdn1.edgedatg.com/re/video_fep/cc/RKE_407_FIREFIGHT_EPISODE_e7843d7d-5b7a-4b0a-8372-1dd28914bf6c_10583329_EN_01hr.xml"
+            }, {
+                "lang": "en-us",
+                "type": "ttml",
+                "value": "http://cdn1.edgedatg.com/re/video_fep/cc/RKE_407_FIREFIGHT_EPISODE_e7843d7d-5b7a-4b0a-8372-1dd28914bf6c_10583329_EN_00hr.xml"
+            }],
+            "enabled": true
+        },
+        "assets": {
+            "asset": [{
+                "lang": "en-us",
+                "storageid": "d874124ecca24c88a3c9575e78686acf",
+                "storagetype": "uplynk",
+                "format": "ULNK",
+                "value": "http://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/5e4c42ff60494120886e8a5e2c92d6f5.m3u8",
+                "ratio": "16:9"
+            }, {
+                "lang": "en-us",
+                "format": "ULNK_MPD",
+                "value": "http://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/5e4c42ff60494120886e8a5e2c92d6f5",
+                "ratio": "16:9"
+            }]
+        },
+        "adtarget": {
+            "abcdvas": {
+                "cprogram": "pt",
+                "cgenre": "drama",
+                "cshow": "therookie",
+                "cserie": "4",
+                "cvideo": "EP407"
+            },
+            "freewheel": {
+                "cid": "EP:therookie:4:7:0:0",
+                "cshow": "therookie"
+            }
+        },
+        "trackcode": {
+            "generic": {
+                "cvideo": "EP407",
+                "ccategory": "Full Episode"
+            },
+            "nielsen": {
+                "ctype": "NO_TRACKING"
+            }
+        },
+        "stores": {
+            "store": []
+        },
+        "thumbnails": {
+            "thumbnail": [{
+                "width": "300",
+                "height": "169",
+                "type": "1x1",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/300x169-Q100_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "362",
+                "height": "204",
+                "type": "1x1",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/362x204-Q100_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "480",
+                "height": "270",
+                "type": "1x1",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/480x270-Q100_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "579",
+                "height": "325",
+                "type": "1x1",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/579x325-Q100_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "1556",
+                "height": "876",
+                "type": "episodic",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/1556x876-Q75_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "1167",
+                "height": "657",
+                "type": "episodic",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/1167x657-Q75_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "778",
+                "height": "438",
+                "type": "episodic",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/778x438-Q80_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }, {
+                "width": "389",
+                "height": "219",
+                "type": "episodic",
+                "value": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/video/407/b4cb145cde6d945f39f0e03937509ff8/389x219-Q80_b4cb145cde6d945f39f0e03937509ff8.jpg",
+                "ratio": "16x9",
+                "languages": ["all"]
+            }]
+        },
+        "keywords": "midlife,crisis,police,academy,LAPD,Mekia Cox,Alyssa Diaz,Nathan Fillion,Richard T. Jones,Titus Makin Jr.,Melissa O’Neil,Eric Winter",
+        "inFreeWindow": true,
+        "inSubWindon": false,
+        "social": {
+            "share": {
+                "link": "http://abc.com/shows/the-rookie/episode-guide/season-04/07-fire-fight",
+                "caption": "Watch on ABC - The Rookie: Fire Fight",
+                "description": "Chen and Bradford enlist Grey's help.",
+                "name": "The Rookie:Fire Fight",
+                "thumbnail": "http://cdn1.edgedatg.com/aws/v2/abc/TheRookie/showimages/4bd08edbf97d90ef2f74748f1f7843b1/324x176-Q90_4bd08edbf97d90ef2f74748f1f7843b1.jpg",
+                "networks": {
+                    "sharingtype": "all"
+                },
+                "fastshare": false
+            }
+        },
+        "videoid": "vdka25290950",
+        "houseid": "ROOK04-0407",
+        "lastmodifieddate": "Sun, 14 Nov 2021 18:22:31 -0800",
+        "ismovie": false,
+        "isDigitalOnly": false,
+        "actors": "Mekia Cox,Alyssa Diaz,Nathan Fillion,Richard T. Jones,Titus Makin Jr.,Melissa O’Neil,Eric Winter",
+        "availabilities": {
+            "free": {
+                "start": "Mon, 22 Nov 2021 02:00:00 -0800",
+                "end": "Wed, 1 Jun 2022 02:00:00 -0700"
+            }
+        },
+        "originalAirdateEpoch": 27282600,
+        "audioassets": {
+            "audioasset": [{
+                "format": "Wave",
+                "role": "Descriptive Video Service",
+                "lang": "EN",
+                "channel": "2",
+                "storagetype": "UPLYNK",
+                "src": "TheRookie_episode_RKE_407_FireFight.wav"
+            }]
+        },
+        "isBonus": false,
+        "tracking": {
+            "videoTitle": "firefight"
+        },
+        "isHideShowName": false,
+        "webFreeAvaildate": "Mon, 22 Nov 2021 02:00:00 -0800",
+        "webFreeExpiredate": "Wed, 1 Jun 2022 02:00:00 -0700",
+        "numberWithPadding": "07"
+    }],
+    "totalcount": "1"
+}
+
+----------------------------------------
+
+summary:
+========
+  asset_url   = "http://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/5e4c42ff60494120886e8a5e2c92d6f5.m3u8"
+  video_id    = "VDKA25290950"
+  video_type  = "lf"
+  accesslevel = "0"
+
+  POST_data = {
+    "video_id":   "VDKA25290950",
+    "video_type": "lf",
+    "brand":      "001",
+    "device":     "001"
+  }
+
+----------------------------------------
+
+curl 'https://api.entitlement.watchabc.go.com/vp2/ws-secure/entitlement/2020/authorize.json' \
+  -X POST --data 'video_id=VDKA25290950&video_type=lf&brand=001&device=001' \
+  --insecure --compressed
+
+result:
+=======
+{
+    "date": 1637780869158,
+    "uplynkData": {
+        "sessionKey": "cqs=xMuCtmBffJdpQ2WGtzEJjLtI2GY-p5tMPmxyKs4SzaJrr6t0HC02RS3beDAB67KQH7es4BbUJZ6kznw3t3-o5H35lQPYnPsoc1SitIcFmkNTbi4xeH7UbAtMPyRr3GmUwTcqccZaFdKCRGj7OeoNKRXccOJxx9uyPzeBnhl1YGr-yqhU0YvdTsxYj2FvxdJMGBcPkq6iqjjEeXhKClIsr40I9lFGlbczAZA-VQYO6oWqMbRTJBfowS_efLhpycHJLshSQ6iCXknam2WxzKGHiw_ZofcqS5Pv57Stbo4f5dgzLXXhiO9My4HA-y0MeR72T7m4KUA4xnaokhbHKofVzp5yrzvhkwsHUnGrLLdBq_QyayH4nJ3j99JnAY7Cv1t0Vx8LBRnvOf21Mf9zwCnAFIMRoxAhQEF2-OV5lTWl1WLn4N0_adP3jdOFruR-rFPZ_zRFP-QdqFafQIF46GrINFlDPNqUFnQSmvk219U9MJ-9MzQxw_vVvxzHAXPTWZJq&kid=4098a6a720374bfcbb4e362b652bcd51"
+    },
+    "kalturaData": {
+        "ksession": "redacted"
+    },
+    "entitlementData": {
+        "build": "14332",
+        "device": "001",
+        "brand": "001",
+        "ipaddress": "",
+        "xff": ""
+    }
+}
+
+----------------------------------------
+
+summary:
+========
+  asset_url = "http://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/5e4c42ff60494120886e8a5e2c92d6f5.m3u8?cqs=xMuCtmBffJdpQ2WGtzEJjLtI2GY-p5tMPmxyKs4SzaJrr6t0HC02RS3beDAB67KQH7es4BbUJZ6kznw3t3-o5H35lQPYnPsoc1SitIcFmkNTbi4xeH7UbAtMPyRr3GmUwTcqccZaFdKCRGj7OeoNKRXccOJxx9uyPzeBnhl1YGr-yqhU0YvdTsxYj2FvxdJMGBcPkq6iqjjEeXhKClIsr40I9lFGlbczAZA-VQYO6oWqMbRTJBfowS_efLhpycHJLshSQ6iCXknam2WxzKGHiw_ZofcqS5Pv57Stbo4f5dgzLXXhiO9My4HA-y0MeR72T7m4KUA4xnaokhbHKofVzp5yrzvhkwsHUnGrLLdBq_QyayH4nJ3j99JnAY7Cv1t0Vx8LBRnvOf21Mf9zwCnAFIMRoxAhQEF2-OV5lTWl1WLn4N0_adP3jdOFruR-rFPZ_zRFP-QdqFafQIF46GrINFlDPNqUFnQSmvk219U9MJ-9MzQxw_vVvxzHAXPTWZJq&kid=4098a6a720374bfcbb4e362b652bcd51"
+
+result:
+=======
+* success
+  - HLS video plays perfectly on both ExoAirPlayer and Chromecast
+  - TTML closed caption also play on ExoAirPlayer
+    * only tested w/ added hash to include file extension hint
+      ex: "http://---_EN_00hr.xml#text.ttml"
+
+--------------------------------------------------------------------------------

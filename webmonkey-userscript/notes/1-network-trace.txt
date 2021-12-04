@@ -1,0 +1,99 @@
+--------------------------------------------------------------------------------
+
+https://abc.com/
+https://abc.com/browse
+https://abc.com/shows/the-rookie
+https://abc.com/shows/the-rookie/episode-guide/season-4
+https://abc.com/shows/the-rookie/episode-guide/season-04/01-life-and-death
+
+--------------------------------------------------------------------------------
+// view-source:https://abc.com/shows/the-rookie/episode-guide/season-4
+
+<script data-react-helmet="true" type="application/ld+json">
+    [{
+        "@context": "http://schema.org/",
+        "@type": "ItemList" ,
+        "itemlistElement":
+            [[{
+                "@type": "ListItem",
+                "position" : 1,
+                "name" : "season 4",
+                "item":  [{
+                    "@type": "Thing",
+                    "name" : "Red Hot",
+                    "url" : "www.abc.com/shows/the-rookie/episode-guide/season-04/04-red-hot"
+                },{
+                    "@type": "Thing",
+                    "name" : "In the Line of Fire",
+                    "url" : "www.abc.com/shows/the-rookie/episode-guide/season-04/03-in-the-line-of-fire"
+                },{
+                    "@type": "Thing",
+                    "name" : "Five Minutes",
+                    "url" : "www.abc.com/shows/the-rookie/episode-guide/season-04/02-five-minutes"
+                },{
+                    "@type": "Thing",
+                    "name" : "Life and Death",
+                    "url" : "www.abc.com/shows/the-rookie/episode-guide/season-04/01-life-and-death"
+                }]
+            }]]
+    }]
+</script>
+
+--------------------------------------------------------------------------------
+// view-source:https://abc.com/shows/the-rookie/episode-guide/season-04/01-life-and-death
+
+"assets": [{
+    "language": "en-us",
+    "storageId": "d874124ecca24c88a3c9575e78686acf",
+    "storageType": "uplynk",
+    "format": "ULNK",
+    "value": "https://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/c98f409932804da098f6cc6ad96ef44c.m3u8",
+    "ratio": "16:9"
+}, {
+    "language": "en-us",
+    "storageId": "d874124ecca24c88a3c9575e78686acf",
+    "storageType": "uplynk",
+    "format": "MPD",
+    "value": "https://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/c98f409932804da098f6cc6ad96ef44c.mpd",
+    "ratio": "16:9"
+}]
+
+notes:
+ * array occurs 3x times, all having identical values
+   - 2x times as mapped to key: "assets"
+   - 1x times as mapped to key: "asts"
+
+--------------------------------------------------------------------------------
+// https://content-dtci.uplynk.com/ext/d874124ecca24c88a3c9575e78686acf/c98f409932804da098f6cc6ad96ef44c.m3u8
+
+notes:
+ * stream is DRM protected
+
+--------------------------------------------------------------------------------
+// https://content-ausw2-ur-dtci1.uplynk.com/dc6493ad740646738d2c11b3824a94a4/d.m3u8
+//   child manifest for one of the available stream resolutions
+
+#EXT-X-KEY:METHOD=SAMPLE-AES,URI="skd://content-ausw2-ur-dtci1.uplynk.com/fp-spc/?b=dc6493ad740646738d2c11b3824a94a4&v=dc6493ad740646738d2c11b3824a94a4&r=d&pbs=&sig=6d6f26c02ffae60add8e3e24fe28eabc3611bba928717b499f85bfa5109a8505",KEYFORMAT="com.apple.streamingkeydelivery",KEYFORMATVERSIONS="1"
+
+--------------------------------------------------------------------------------
+// https://github.com/google/ExoPlayer/issues/6488
+//
+// https://exoplayer.dev/hls.html#content-protection
+//   AES-128        : is supported
+//   Sample AES-128 : not supported
+//
+// https://exoplayer.dev/drm.html
+// https://exoplayer.dev/supported-formats.html
+//
+// https://docs.unified-streaming.com/tutorials/drm/sample_aes.html
+// https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/HLS_Sample_Encryption/Encryption/Encryption.html
+//   Sample AES encryption for HLS output is used for Apple's FairPlay DRM
+//
+// https://github.com/streamlink/streamlink/issues/2212
+//   discussion: AES-128 vs SAMPLE-AES
+
+notes:
+ * looks like the video streams use a method of encryption that isn't supported by many players
+   - including ExoPlayer and Chromecast
+
+--------------------------------------------------------------------------------

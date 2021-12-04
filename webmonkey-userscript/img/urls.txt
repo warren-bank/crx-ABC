@@ -1,0 +1,11 @@
+material icons:
+===============
+https://materializecss.com/icons.html
+
+source:
+=======
+https://github.com/material-icons/material-icons-png/raw/master/png/black/lock/outline.png
+
+mirror:
+=======
+https://github.com/warren-bank/crx-NBC/raw/webmonkey-userscript/es5/webmonkey-userscript/img/black.lock.outline.png
