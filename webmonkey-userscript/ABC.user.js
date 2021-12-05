@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ABC
 // @description  Watch videos in external player.
-// @version      1.0.3
+// @version      1.0.4
 // @match        *://abc.com/*
 // @match        *://*.abc.com/*
 // @icon         https://abc.com/favicon.ico
@@ -637,6 +637,11 @@ var reinitialize_dom = function() {
       // --------------------------------------------------- CSS: global
 
       'body {',
+      '  margin: 0;',
+      '  padding: 0;',
+      '  font-family: serif;',
+      '  font-size: 16px;',
+      '  color: #000 !important;',
       '  background-color: #fff !important;',
       '  text-align: left;',
       '}',
@@ -644,22 +649,26 @@ var reinitialize_dom = function() {
       // --------------------------------------------------- CSS: show
 
       'div.' + constants.dom_classes.div_show + ' > h2 {',
+      '  display: block;',
+      '  margin: 0;',
+      '  padding: 0.5em;',
+      '  font-size: 22px;',
       '  text-align: center;',
-      '  margin: 0.5em 0;',
+      '  background-color: #ccc;',
       '}',
 
       'div.' + constants.dom_classes.div_show + ' > h2 > a {',
       '  display: inline-block;',
       '  margin: 0;',
-      '  color: blue;',
+      '  color: inherit;',
       '  text-decoration: none;',
       '}',
 
       'div.' + constants.dom_classes.div_show + ' > blockquote {',
       '  display: block;',
-      '  background-color: #eee;',
-      '  padding: 0.5em 1em;',
       '  margin: 0;',
+      '  padding: 0.5em;',
+      '  font-size: 18px;',
       '}',
 
       // --------------------------------------------------- CSS: episodes
@@ -668,6 +677,7 @@ var reinitialize_dom = function() {
       '  list-style: none;',
       '  margin: 0;',
       '  padding: 0;',
+      '  padding-left: 1em;',
       '}',
 
       'div.' + constants.dom_classes.div_episodes + ' > ul > li {',
