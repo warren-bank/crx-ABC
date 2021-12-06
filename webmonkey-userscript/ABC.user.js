@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ABC
 // @description  Watch videos in external player.
-// @version      1.0.4
+// @version      1.0.5
 // @match        *://abc.com/*
 // @match        *://*.abc.com/*
 // @icon         https://abc.com/favicon.ico
@@ -23,7 +23,8 @@ var user_options = {
     "preferred_language":           "en-us",
 
     "rewrite_show_pages":           true,
-    "sort_newest_first":            true
+    "sort_newest_first":            true,
+    "wrap_history_state_mutations": true
   },
   "webmonkey": {
     "post_intent_redirect_to_url":  "about:blank"
@@ -171,7 +172,16 @@ var download_text = function(url, headers, data, callback) {
     if (!headers['content-type'])
       headers['content-type'] = 'application/x-www-form-urlencoded'
 
-    data = serialize_xhr_body_object(data)
+    switch(headers['content-type'].toLowerCase()) {
+      case 'application/json':
+        data = JSON.stringify(data)
+        break
+
+      case 'application/x-www-form-urlencoded':
+      default:
+        data = serialize_xhr_body_object(data)
+        break
+    }
   }
 
   var xhr    = new unsafeWindow.XMLHttpRequest()
@@ -204,10 +214,12 @@ var download_text = function(url, headers, data, callback) {
 }
 
 var download_json = function(url, headers, data, callback) {
-  download_text(url, headers, data, function(text){
-    if (!headers) headers = {}
+  if (!headers)
+    headers = {}
+  if (!headers.accept)
     headers.accept = 'application/json'
 
+  download_text(url, headers, data, function(text){
     try {
       callback(JSON.parse(text))
     }
@@ -467,24 +479,26 @@ var process_video_data = function(data) {
       args.push('referUrl')
       args.push(data.referer_url)
     }
-    if (data.drm.scheme) {
-      args.push('drmScheme')
-      args.push(data.drm.scheme)
-    }
-    if (data.drm.server) {
-      args.push('drmUrl')
-      args.push(data.drm.server)
-    }
-    if (data.drm.headers && (typeof data.drm.headers === 'object')) {
-      var drm_header_keys, drm_header_key, drm_header_val
+    if (data.drm instanceof Object) {
+      if (data.drm.scheme) {
+        args.push('drmScheme')
+        args.push(data.drm.scheme)
+      }
+      if (data.drm.server) {
+        args.push('drmUrl')
+        args.push(data.drm.server)
+      }
+      if (data.drm.headers instanceof Object) {
+        var drm_header_keys, drm_header_key, drm_header_val
 
-      drm_header_keys = Object.keys(data.drm.headers)
-      for (var i=0; i < drm_header_keys.length; i++) {
-        drm_header_key = drm_header_keys[i]
-        drm_header_val = data.drm.headers[drm_header_key]
+        drm_header_keys = Object.keys(data.drm.headers)
+        for (var i=0; i < drm_header_keys.length; i++) {
+          drm_header_key = drm_header_keys[i]
+          drm_header_val = data.drm.headers[drm_header_key]
 
-        args.push('drmHeader')
-        args.push(drm_header_key + ': ' + drm_header_val)
+          args.push('drmHeader')
+          args.push(drm_header_key + ': ' + drm_header_val)
+        }
       }
     }
 
@@ -1177,6 +1191,8 @@ var init = function() {
 }
 
 init()
-wrap_history_state_mutations()
+
+if (user_options.common.wrap_history_state_mutations)
+  wrap_history_state_mutations()
 
 // -----------------------------------------------------------------------------
