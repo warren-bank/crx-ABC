@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ABC
 // @description  Watch videos in external player.
-// @version      1.0.5
+// @version      1.0.6
 // @match        *://abc.com/*
 // @match        *://*.abc.com/*
 // @icon         https://abc.com/favicon.ico
@@ -1085,8 +1085,8 @@ var init = function() {
   var scripts, script, prefix
   var modules, tiles
 
-  if (unsafeWindow.window['__abc_com__'] instanceof Object)
-    data = unsafeWindow.window['__abc_com__']
+  if (unsafeWindow.window['__abc-com__'] instanceof Object)
+    data = unsafeWindow.window['__abc-com__']
 
   if (!data) {
     try {
@@ -1094,7 +1094,7 @@ var init = function() {
       for (var i=0; i < scripts.length; i++) {
         script = scripts[i]
         script = script.innerText.trim()
-        prefix = "window['__abc_com__']="
+        prefix = "window['__abc-com__']="
 
         if (script && (script.indexOf(prefix) === 0)) {
           script = script.substring(prefix.length, script.length)
